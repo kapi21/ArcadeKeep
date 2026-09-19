@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <radialGradient id="neonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0c0f17" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="#0c0f17"/>
+  <rect x="2" y="2" width="96" height="96" rx="20" fill="none" stroke="#00e5ff" stroke-width="2.5" opacity="0.6"/>
+  <circle cx="50" cy="50" r="45" fill="url(#neonGlow)"/>
+  <!-- Joystick Base -->
+  <path d="M22 64 C22 58 26 56 34 56 L66 56 C74 56 78 58 78 64 L74 82 C74 86 70 88 64 88 L36 88 C30 88 26 86 26 82 Z" fill="#1b2133" stroke="#252e42" stroke-width="2"/>
+  <!-- Joystick Buttons -->
+  <circle cx="62" cy="72" r="5" fill="#ff007f" />
+  <circle cx="72" cy="68" r="4" fill="#ffb703" />
+  <!-- Joystick Shaft -->
+  <rect x="46" y="28" width="8" height="30" rx="4" fill="#94a3b8" />
+  <!-- Joystick Red Ball Top -->
+  <circle cx="50" cy="26" r="14" fill="#ef4444" />
+  <circle cx="46" cy="22" r="4" fill="#ff9999" opacity="0.7"/>
+</svg>

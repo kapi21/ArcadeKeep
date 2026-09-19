@@ -1,0 +1,18 @@
+{
+  "name": "ArcadeKeep - Colección Retro",
+  "short_name": "ArcadeKeep",
+  "description": "Gestor y preservador de colecciones de videojuegos, consolas y hardware retro",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0f17",
+  "theme_color": "#0c0f17",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

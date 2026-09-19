@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArcadeKeep - Gestor de Colección Retro</title>
+  <meta name="description" content="ArcadeKeep - Gestor y preservador de colecciones de videojuegos, consolas y hardware retro con escaneo de códigos de barras, autocompletado y tasación de mercado.">
+  <meta name="theme-color" content="#0c0f17">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ArcadeKeep">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/favicon.svg">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Librería ligera para escaneo de códigos de barras por cámara con fallback -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+
+  <!-- Cabecera de la Aplicación -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#" class="logo-brand" id="btn-home">
+        <span class="logo-icon">🕹️</span>
+        <div class="logo-text">
+          <h1>ARCADEKEEP</h1>
+          <span>PRESERVACIÓN & GESTIÓN DE COLECCIÓN RETRO</span>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <button class="btn btn-secondary btn-sm" id="btn-open-mobile" title="Abrir en el móvil para usar la cámara en LAN">
+          📱 <span>Móvil / QR</span>
+        </button>
+        <button class="btn btn-scan" id="btn-open-scanner" title="Escanear con cámara">
+          📷 <span>Escanear Código</span>
+        </button>
+        <button class="btn btn-primary" id="btn-new-item" title="Añadir ítem manualmente">
+          ➕ <span>Nuevo Ítem</span>
+        </button>
+        <button class="btn btn-secondary btn-sm" id="btn-export-backup" title="Descargar copia de seguridad en JSON">
+          💾 Exportar
+        </button>
+        <button class="btn btn-secondary btn-sm" id="btn-open-import" title="Restaurar copia de seguridad">
+          📥 Importar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="main-content">
+
+    <!-- Barra de Métricas Globales -->
+    <section class="stats-grid" id="stats-container">
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-total-items">0</div>
+          <div class="stat-label">Total Ítems</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎮</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-total-games">0</div>
+          <div class="stat-label">Videojuegos</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📺</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-total-consoles">0</div>
+          <div class="stat-label">Consolas</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🕹️</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-total-accessories">0</div>
+          <div class="stat-label">Accesorios</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💎</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-total-value">0 €</div>
+          <div class="stat-label">Valor Estimado</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Barra de Búsqueda y Filtros -->
+    <section class="toolbar-panel">
+      <div class="search-box-row">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Buscar por título, código de barras, notas, número de serie...">
+        </div>
+        <button class="btn btn-secondary" id="btn-clear-filters" title="Limpiar filtros">
+          Restablecer
+        </button>
+      </div>
+
+      <div class="filters-row">
+        <select class="filter-select" id="filter-platform">
+          <option value="">Todas las plataformas</option>
+        </select>
+
+        <select class="filter-select" id="filter-type">
+          <option value="">Todos los tipos</option>
+          <option value="game">Videojuegos</option>
+          <option value="console">Consolas</option>
+          <option value="accessory">Accesorios / Mandos</option>
+          <option value="book_doc">Libros / Manuales</option>
+          <option value="mod_hardware">Mods & Hardware</option>
+        </select>
+
+        <select class="filter-select" id="filter-condition">
+          <option value="">Cualquier estado</option>
+          <option value="CIB">CIB (Caja + Manual + Juego)</option>
+          <option value="Boxed">En caja (Sin manual)</option>
+          <option value="Loose">Solo cartucho / consola</option>
+          <option value="Sealed">Precintado / Nuevo</option>
+        </select>
+
+        <select class="filter-select" id="filter-region">
+          <option value="">Cualquier región</option>
+          <option value="PAL-ESP">PAL España</option>
+          <option value="PAL">PAL Europa</option>
+          <option value="NTSC-U">NTSC USA</option>
+          <option value="NTSC-J">NTSC Japón</option>
+          <option value="Region Free">Region Free</option>
+        </select>
+
+        <button class="tag-badge-filter" id="filter-fav-btn">★ Favoritos</button>
+      </div>
+    </section>
+
+    <!-- Rejilla de Ítems -->
+    <section class="items-grid" id="items-container">
+      <div class="empty-state">
+        <div class="empty-state-icon">👾</div>
+        <h3>Tu colección está vacía</h3>
+        <p>Escanea un código de barras o pulsa "Nuevo Ítem" para comenzar a catalogar.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       MODAL 1: PRE-VISUALIZACIÓN Y EDICIÓN ANTES DE GUARDAR
+       ========================================================================= -->
+  <div class="modal-overlay" id="modal-item-form">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="form-modal-title">📝 Ficha de Ítem (Pre-visualización)</h2>
+        <button class="modal-close-btn" id="btn-close-form">&times;</button>
+      </div>
+      <form id="item-form" class="modal-body">
+        <input type="hidden" id="form-item-id">
+
+        <!-- Fila Código de Barras y Búsqueda Automática -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="form-barcode">Código de Barras (EAN / UPC)</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="form-barcode" class="form-control" placeholder="Ej: 0045496630577">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-lookup-barcode" title="Buscar metadatos online">
+                🔎 Buscar
+              </button>
+            </div>
+            <small id="barcode-status-msg" style="font-size: 0.75rem; color: var(--accent-cyan); display: none;"></small>
+          </div>
+
+          <div class="form-group">
+            <label for="form-type">Tipo de Ítem</label>
+            <select id="form-type" class="form-control" required>
+              <option value="game">Videojuego</option>
+              <option value="console">Consola</option>
+              <option value="accessory">Accesorio / Mandos</option>
+              <option value="book_doc">Libro / Guía Oficial</option>
+              <option value="mod_hardware">Modding / Chip / Hardware</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Fila Título con Autocompletado -->
+        <div class="form-group form-grid-full" style="position: relative;">
+          <label for="form-title">Título o Nombre del Ítem *</label>
+          <input type="text" id="form-title" class="form-control" placeholder="Ej: The Legend of Zelda: A Link to the Past" required autocomplete="off">
+          <div id="autocomplete-list" class="autocomplete-box" style="display: none;"></div>
+        </div>
+
+        <!-- Plataforma y Región -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="form-platform">Plataforma / Sistema *</label>
+            <select id="form-platform" class="form-control" required>
+              <option value="">Selecciona plataforma...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="form-region">Región</label>
+            <select id="form-region" class="form-control">
+              <option value="PAL-ESP">PAL España (Manual/Caja en ES)</option>
+              <option value="PAL">PAL Europa / UK</option>
+              <option value="NTSC-U">NTSC USA / Canadá</option>
+              <option value="NTSC-J">NTSC Japón</option>
+              <option value="Region Free">Region Free</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Estado de conservación y Valoración -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="form-condition">Estado de Contenido</label>
+            <select id="form-condition" class="form-control">
+              <option value="CIB">CIB (Completo: Caja + Manual + Juego)</option>
+              <option value="Boxed">En caja (Caja + Juego, sin manual)</option>
+              <option value="Loose">Solo cartucho / consola suelta</option>
+              <option value="Sealed">Precintado / A estrenar</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="form-rating">Estado Estético/Funcional (1 a 10)</label>
+            <input type="number" id="form-rating" class="form-control" min="1" max="10" value="8">
+          </div>
+        </div>
+
+        <!-- Precios y Número de Serie -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="form-price">Precio de Compra (€)</label>
+            <input type="number" step="any" id="form-price" class="form-control" placeholder="0.00">
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="form-value">Valor Estimado Actual (€)</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-fetch-valuation" title="Consultar precio real de mercado en PriceCharting" style="padding: 0.15rem 0.5rem; font-size: 0.75rem; border-color: var(--accent-cyan);">
+                📈 Tasar con PriceCharting
+              </button>
+            </div>
+            <input type="number" step="any" id="form-value" class="form-control" placeholder="0.00">
+            <small id="valuation-hint" style="font-size: 0.75rem; color: var(--accent-emerald); display: none; margin-top: 0.2rem;"></small>
+          </div>
+        </div>
+
+        <!-- Ubicación y Número de Serie -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="form-serial">Número de Serie / Código Modelo</label>
+            <input type="text" id="form-serial" class="form-control" placeholder="Ej: SNSP-001A(FRG) / N1038484">
+          </div>
+
+          <div class="form-group">
+            <label for="form-location">Ubicación Física</label>
+            <input type="text" id="form-location" class="form-control" placeholder="Ej: Vitrina 2, Balda SNES">
+          </div>
+        </div>
+
+        <!-- Imagen de Portada -->
+        <div class="form-group form-grid-full">
+          <label for="form-cover">URL Imagen de Portada (o puedes adjuntarla tras guardar)</label>
+          <input type="url" id="form-cover" class="form-control" placeholder="https://...">
+        </div>
+
+        <!-- Notas técnicas -->
+        <div class="form-group form-grid-full">
+          <label for="form-notes">Notas / Historial de Reparación o Mods</label>
+          <textarea id="form-notes" class="form-control" placeholder="Pila sustituida con zócalo CR2032, recap realizado, cables incluidos, etc."></textarea>
+        </div>
+
+        <!-- Opciones Rápidas -->
+        <div class="form-grid" style="align-items: center;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="form-fav">
+            <span>Marcar como Favorito ★</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="form-mods">
+            <span>Tiene Modificaciones / Hack de Hardware ⚡</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-form">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-item">💾 Guardar en Colección</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: ESCÁNER DE CÁMARA
+       ========================================================================= -->
+  <div class="modal-overlay" id="modal-scanner">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">📷 Escanear Código de Barras</h2>
+        <button class="modal-close-btn" id="btn-close-scanner">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+          Enfoca el código de barras (EAN/UPC) con la cámara de tu móvil dentro del recuadro:
+        </p>
+        <div id="scanner-video-container"></div>
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; width: 100%;">
+          <input type="text" id="scanner-manual-code" class="form-control" placeholder="O escribe el código a mano" style="flex: 1; max-width: 320px; font-family: var(--font-mono); font-weight: 700;">
+          <button class="btn btn-primary" id="btn-scanner-manual-submit" style="min-width: 90px;">Aceptar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 3: FICHA DE DETALLE CON FOTOS Y DOCUMENTOS
+       ========================================================================= -->
+  <div class="modal-overlay" id="modal-item-detail">
+    <div class="modal-content" style="max-width: 850px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="detail-title">🎮 Detalle del Ítem</h2>
+        <button class="modal-close-btn" id="btn-close-detail">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Cabecera de Ficha -->
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+          <div style="width: 180px; height: 230px; background: #000; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-card); flex-shrink: 0;">
+            <img id="detail-cover-img" src="" alt="Portada" style="width: 100%; height: 100%; object-fit: contain;">
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <span class="badge badge-platform" id="detail-badge-platform">SNES</span>
+              <span class="badge badge-condition-cib" id="detail-badge-condition">CIB</span>
+              <span class="badge" style="background: rgba(255,255,255,0.06);" id="detail-badge-region">PAL-ESP</span>
+              <span id="detail-rating" style="color: var(--accent-amber); font-weight: bold;">⭐ 8/10</span>
+            </div>
+            <h2 id="detail-name" style="font-size: 1.4rem; font-weight: 800;">Nombre del Juego</h2>
+            <div id="detail-meta-list" style="font-size: 0.85rem; color: var(--text-secondary); display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4rem; margin-top: 0.5rem;">
+              <div><strong>Código:</strong> <span id="detail-barcode" style="font-family: var(--font-mono);">-</span></div>
+              <div><strong>Nº Serie:</strong> <span id="detail-serial">-</span></div>
+              <div><strong>Compra:</strong> <span id="detail-price">-</span></div>
+              <div><strong>Valor Est.:</strong> <span id="detail-value">-</span></div>
+              <div><strong>Ubicación:</strong> <span id="detail-location">-</span></div>
+              <div><strong>Adquisición:</strong> <span id="detail-date">-</span></div>
+            </div>
+            <div id="detail-notes-box" style="margin-top: 0.5rem; background: var(--bg-main); padding: 0.6rem 0.8rem; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-secondary); border-left: 3px solid var(--accent-cyan);">
+              <em>Sin notas registradas.</em>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pestañas Multimedia -->
+        <div style="margin-top: 1.5rem;">
+          <div class="detail-tabs">
+            <button class="tab-btn active" id="tab-btn-photos">📷 Fotos y Placa (<span id="photos-count">0</span>)</button>
+            <button class="tab-btn" id="tab-btn-docs">📄 Documentos y Manuales (<span id="docs-count">0</span>)</button>
+          </div>
+
+          <!-- Pestaña 1: Fotos -->
+          <div id="tab-content-photos">
+            <div class="dropzone" id="dropzone-photos">
+              <p>📸 <strong>Arrastra fotos aquí</strong> o haz clic para subir fotos (portada, cartucho, placa de circuitos, número de serie, caja)</p>
+              <input type="file" id="file-input-photos" multiple accept="image/*" style="display: none;">
+            </div>
+            <div class="gallery-grid" id="detail-gallery"></div>
+          </div>
+
+          <!-- Pestaña 2: Documentos -->
+          <div id="tab-content-docs" style="display: none;">
+            <div class="dropzone" id="dropzone-docs">
+              <p>📄 <strong>Arrastra documentos aquí</strong> o haz clic para subir manuales en PDF, facturas o esquemas</p>
+              <input type="file" id="file-input-docs" multiple accept=".pdf,.txt,.doc,.docx" style="display: none;">
+            </div>
+            <div class="docs-list" id="detail-docs"></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button class="btn btn-danger btn-sm" id="btn-delete-item">🗑️ Eliminar Ítem</button>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="btn btn-secondary btn-sm" id="btn-detail-revalue" style="border-color: var(--accent-emerald);">📈 Actualizar Tasación</button>
+          <button class="btn btn-secondary btn-sm" id="btn-edit-item">✏️ Editar Ficha</button>
+          <button class="btn btn-secondary btn-sm" id="btn-close-detail-footer">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 4: IMPORTAR COPIA DE SEGURIDAD
+       ========================================================================= -->
+  <div class="modal-overlay" id="modal-import">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h2 class="modal-title">📥 Importar Copia de Seguridad</h2>
+        <button class="modal-close-btn" id="btn-close-import">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Selecciona un archivo JSON generado previamente con la opción "Exportar":
+        </p>
+        <input type="file" id="import-file-input" accept=".json" class="form-control">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-cancel-import">Cancelar</button>
+        <button class="btn btn-primary" id="btn-submit-import">Restaurar Colección</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 5: CONECTAR DESDE EL MÓVIL EN LAN (CÁMARA HTTPS)
+       ========================================================================= -->
+  <div class="modal-overlay" id="modal-lan-mobile">
+    <div class="modal-content" style="max-width: 460px; text-align: center;">
+      <div class="modal-header">
+        <h2 class="modal-title">📱 Conectar Móvil en Red Local</h2>
+        <button class="modal-close-btn" id="btn-close-mobile-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="align-items: center;">
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+          Los navegadores móviles requieren <strong>HTTPS</strong> para permitir el acceso a la cámara. Escanea este código QR o abre la dirección:
+        </p>
+
+        <div style="margin: 1rem 0; padding: 0.8rem; background: #0c0f17; border-radius: var(--radius-md); border: 1px solid var(--accent-cyan); display: inline-block;">
+          <img id="mobile-qr-img" src="" alt="Código QR LAN" style="width: 200px; height: 200px; display: block; border-radius: 4px;">
+        </div>
+
+        <div style="background: var(--bg-main); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-card); width: 100%; word-break: break-all;">
+          <a id="mobile-https-url" href="" target="_blank" style="color: var(--accent-cyan); font-family: var(--font-mono); font-weight: bold; text-decoration: none; font-size: 1rem;">
+            Cargando URL...
+          </a>
+        </div>
+
+        <div style="text-align: left; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem; line-height: 1.4; background: rgba(255, 183, 3, 0.08); border-left: 3px solid var(--accent-amber); padding: 0.6rem 0.8rem; border-radius: 4px;">
+          <strong>Nota de seguridad en tu móvil:</strong> Al ser un certificado SSL local de tu red, el navegador mostrará una advertencia. Pulsa en <em>"Configuración avanzada"</em> y luego en <em>"Continuar a ... (sitio no seguro)"</em> para autorizar la cámara.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btn-close-mobile-modal-footer">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor de Alertas Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Script Principal -->
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "arcadekeep",
+  "version": "1.0.0",
+  "description": "ArcadeKeep - Gestor y preservador de colecciones de videojuegos, consolas y hardware retro con tasación automática y PWA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "qrcode": "^1.5.4",
+    "selfsigned": "^5.5.0"
+  }
+}
