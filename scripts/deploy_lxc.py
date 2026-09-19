@@ -46,8 +46,10 @@ FILES_TO_DEPLOY = [
     "public/css/style.css",
     "public/js/app.js",
     "public/favicon.svg",
+    "public/arcadekeep-logo.svg",
     "public/manifest.webmanifest",
     "public/sw.js",
+    "README.md",
     "data/coleccion.db"
 ]
 
